@@ -301,7 +301,7 @@ summarize_dataset(cancer_sample, &quot;Cancer&quot;)</code></pre>
 <!----------------------------------------------------------------------------->
 <p>1.4 <strong>(2 points)</strong> Time for a final decision! Going back to the beginning, it’s important to have an <em>end goal</em> in mind. For example, if I had chosen the <code>titanic</code> dataset for my project, I might’ve wanted to explore the relationship between survival and other variables. Try to think of 1 research question that you would want to answer with your dataset. Note it down below.</p>
 <!-------------------------- Start your work below ---------------------------->
-<p>I’d like to explore how different types of tree grow over time. That is to say, how is the diameter of the tree affected by the date_planted? One interesting sub-question is, has the growth rate remained consistent over time?</p>
+<p>I’d like to explore how different types of tree grow over time. That is to say, how is the diameter of the tree affected by the date_planted?</p>
 <!----------------------------------------------------------------------------->
 </div>
 <div id="important-note" class="section level1">
@@ -423,6 +423,12 @@ print(head(trees_with_age$age))</code></pre>
 <p>We can see a very nice range of ages here, tailing off on the high end as trees got too old to live or to have a known planting date, and on the yound end as well, potentially as vancouver stopped adding new neighbourhoods that needed trees. Of course, it’s important to note that we don’t actually have the time that these measurements were taken. This is these tree’s ages as of writing this report, but of course their diameters and heights are certainly different by now. It’s also unclear over what timeframe this data was collected - was it one short initiative to catalogue all the trees, or has this data been collected over many years? # Task 3: Choose research questions</p>
 <p><strong>(4 points)</strong> So far, you have chosen a dataset and gotten familiar with it through exploring the data. You have also brainstormed one research question that interested you (Task 1.4). Now it’s time to pick 4 research questions that you would like to explore in Milestone 2! Write the 4 questions and any additional comments below.</p>
 <!--- *****START HERE***** --->
+<ol style="list-style-type: decimal">
+<li>How is tree diameter affected by the date planted?</li>
+<li>How does the road side affect tree growth (this is in <code>street_side_name</code>)?</li>
+<li>How is tree growth affected by distance to the coast?</li>
+<li>Given the above factors, which tree species grows the largest?</li>
+</ol>
 <!----------------------------->
 </div>
 </div>

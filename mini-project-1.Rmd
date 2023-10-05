@@ -135,7 +135,6 @@ have some interesting relations.
 <!-------------------------- Start your work below ---------------------------->
 I'd like to explore how different types of tree grow over time. That is to say, how is the diameter of the
 tree affected by the date_planted?
-One interesting sub-question is, has the growth rate remained consistent over time?
 
 <!----------------------------------------------------------------------------->
 
@@ -285,6 +284,10 @@ years?
 **(4 points)** So far, you have chosen a dataset and gotten familiar with it through exploring the data. You have also brainstormed one research question that interested you (Task 1.4).  Now it's time to pick 4 research questions that you would like to explore in Milestone 2! Write the 4 questions and any additional comments below. 
 
 <!--- *****START HERE***** --->
+1. How is tree diameter affected by the date planted?
+2. How does the road side affect tree growth (this is in `street_side_name`)?
+3. How is tree growth affected by distance to the coast?
+4. Given the above factors, which tree species grows the largest?
 
 <!----------------------------->
 
