@@ -168,6 +168,118 @@ Make sure that you're using dplyr and ggplot2 rather than base R for this task. 
 
 <!----------------------------------------------------------------------------->
 
+# Vancouver Trees: A Short data-driven exploration
+
+## Introduction
+Urban ecology is a fascinating field of study describing the biological
+interactions that exist in the urban environment.
+In this report, I will use dplyr and ggplot to explore the growth of trees in
+Vancouver, Canada, using the `vancouver_trees` dataset from the `datateachr` 
+package. This dataset, provided by the City of Vancouver's open data portal 
+lists 20 properties of 146,611 trees in the greater Vancouver area.
+ 
+## Part 1: Data quality
+The first thing I'd like to check is how complete the data is, to ensure I am 
+using high-quality properties and to avoid any bias in my analysis. I will do 
+this by plotting the count of `N/A` values for each variable.
+
+```{R}
+# For each column, count the number of na, and divide by the total length
+pct_na <- vancouver_trees %>%
+  summarise_all(function(x) sum(is.na(x))/length(x)*100) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Percent_NA")
+
+# Print in table form
+print(pct_na)
+
+# Plot it as a bar chart
+pct_na %>% ggplot(aes(x = Variable, y = Percent_NA)) + 
+geom_bar(stat = "identity") +
+ylab("Percentage of N/A values") +
+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+```
+
+As we can see, most variables are complete, although over half are missing the 
+date planted, and over 15% are missing the latitude and longitude.
+Over 45% are also missing the cultivar name, and a few are missing the plant 
+area, but these were not particularly revealing variables anyways.
+
+## Part 2: Height and width of trees
+I see that the trees don't have a measured height, but do have a value called
+`height_range_id`. To get to understand what this might mean, I'll plot it against
+diameter, with the expectation that height and diameter are roughly proportional.
+
+```{R}
+vancouver_trees %>%
+  ggplot(aes(x = factor(height_range_id), y = diameter)) +
+  geom_boxplot() +
+  xlab("Height range index") +
+  ylab("Tree diameter")
+```
+
+As expected, it seems like the median diameter tends to increase with the height
+range, however there are some remarkably wide trees with a relatively low height
+index.
+I wonder if this isn't an error in the data, but it could also simply be due to 
+different species of trees having radically different shapes.
+
+Based on this information, I think it's best to use diameter as an indicator of 
+size, being more precise. It may be worth considering some combination of both
+in the future though
+
+## Part 3:Where are the trees?
+One other basic thing I'd like to know is just where these trees are located in
+Vancouver. I'm hoping that by plotting lattitude against longitude, I'll get a 
+recognizable map of Vancouver, even though we're missing some values
+```{R}
+#This code is a little slow due to the number of points here
+vancouver_trees %>%
+  ggplot(aes(x = longitude, y = latitude)) +
+  geom_point(size = 0.2)
+```
+
+Sure enough, this is a map of vancouver, we can clearly see downtown up top, and
+the shoreline of the Fraser river at the bottom.
+Notably, this dataset seems to be only urban vancouver. The data does not 
+include Pacfic Spirit Park on the west side or Stanley park up north, (which 
+would presumably have very different tree populations than in more urban areas),
+or various other parks which appear as holes in the data.
+There are also a few points which appear to be easy of the cutoff for most other
+trees. I'm not sure how to explain this, maybe these are a few trees in Burnaby 
+that Vancovuer somehow has ownership over, or maybe this is due to errors in
+data entry.
+
+## Part 4: How old are the trees
+### 4a: Converting date planted to age
+While we could just use the "date planted" column directly, I think it will be
+nicer to have a column for age directly. Let's compute this using R's built in
+"date" data type
+```{R}
+trees_with_age <- vancouver_trees %>% 
+  mutate(age = as.Date("2023-10-05") - as.Date(date_planted))
+print(head(trees_with_age$age))
+```
+### 4b: The age distribution
+Now, to learn how old these trees are, let's try a density plot, since this is
+an effectively continuous variable with a large range.
+```{R}
+trees_with_age %>% ggplot(aes(x = age)) +
+  geom_density(color = "darkgreen", fill = "lightgreen") +
+  xlab("Tree age (days)") +
+  ylab("Density")
+```
+
+We can see a very nice range of ages here, tailing off on the high end as trees
+got too old to live or to have a known planting date, and on the yound end as
+well, potentially as vancouver stopped adding new neighbourhoods that needed
+trees.
+Of course, it's important to note that we don't actually have the time that
+these measurements were taken. This is these tree's ages as of writing this 
+report, but of course their diameters and heights are certainly different by now.
+It's also unclear over what timeframe this data was collected - was it one short
+initiative to catalogue all the trees, or has this data been collected over many
+years?
 # Task 3: Choose research questions 
 
 **(4 points)** So far, you have chosen a dataset and gotten familiar with it through exploring the data. You have also brainstormed one research question that interested you (Task 1.4).  Now it's time to pick 4 research questions that you would like to explore in Milestone 2! Write the 4 questions and any additional comments below. 
