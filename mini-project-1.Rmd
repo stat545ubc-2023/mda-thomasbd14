@@ -84,10 +84,10 @@ And that is exactly the first thing that you will do!
 
 <!-------------------------- Start your work below ---------------------------->
 
-1: CHOICE_1\_HERE\
-2: CHOICE_2\_HERE\
-3: CHOICE_3\_HERE\
-4: CHOICE_4\_HERE
+1: *cancer_sample*
+2: *flow_sample*
+3: *steam_games* 
+4: *vancouver_trees*
 
 <!----------------------------------------------------------------------------->
 
@@ -96,10 +96,27 @@ And that is exactly the first thing that you will do!
 *Hint:* This is one of those times when you should think about the cleanliness of your analysis. I added a single code chunk for you below, but do you want to use more than one? Would you like to write more comments outside of the code chunk?
 
 <!-------------------------- Start your work below ---------------------------->
-
+First, I will define a simple function to print out some info on a dataset
 ```{r}
-### EXPLORE HERE ###
-steam_games
+
+summarize_dataset <- function(set, name){
+  cat("############", name,"############", "\n\n\n")
+  cat("Dataset shape (rows columns): ", dim(set), "\n\n")
+  cat("Column names:                 ", colnames(set), "\n\n")
+  classes = lapply(set, class)
+  cat("Data types:                   ",unlist(classes) , "\n\n")
+  cat("\n\n")
+}
+```
+
+Now, I will call my function on the four datasets I'm interested in
+```{r}
+data_sets <- list()
+summarize_dataset(cancer_sample, "Cancer")
+summarize_dataset(flow_sample, "Flow")
+summarize_dataset(steam_games, "Games")
+summarize_dataset(vancouver_trees, "Trees")
+
 ```
 
 <!----------------------------------------------------------------------------->
@@ -107,12 +124,18 @@ steam_games
 1.3 **(1 point)** Now that you've explored the 4 datasets that you were initially most interested in, let's narrow it down to 1. What lead you to choose this one? Briefly explain your choice below.
 
 <!-------------------------- Start your work below ---------------------------->
+Looking at this information, I'd like to study the vancouver trees dataset. It has many observations, which
+should allow for robust data analysis, an has a good set of quantitative properties that seeem like they could
+have some interesting relations.
 
 <!----------------------------------------------------------------------------->
 
 1.4 **(2 points)** Time for a  final decision! Going back to the beginning, it's important to have an *end goal* in mind. For example, if I had chosen the `titanic` dataset for my project, I might've wanted to explore the relationship between survival and other variables. Try to think of 1 research question that you would want to answer with your dataset. Note it down below.
 
 <!-------------------------- Start your work below ---------------------------->
+I'd like to explore how different types of tree grow over time. That is to say, how is the diameter of the
+tree affected by the date_planted?
+One interesting sub-question is, has the growth rate remained consistent over time?
 
 <!----------------------------------------------------------------------------->
 
