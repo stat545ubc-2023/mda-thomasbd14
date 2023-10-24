@@ -265,7 +265,7 @@ south boundaries are right next to the water, as well as the area
 surrounding downtown. As a first-pass approximation, I am going to
 simply use the longitude, as this should roughly approximate the
 distance to the open ocean - we are ignoring the effects of False Creek,
-the Fraser River, etc. I’m
+the Fraser River, etc.
 
 ``` r
 trees_long <-
@@ -339,22 +339,41 @@ First, let me summarize some key statistics of each genus.
 genus_summary <- vancouver_trees %>%
   filter(!is.na(diameter)) %>%
   filter(!is.na(genus_name)) %>%
-  group_by((genus_name)) %>%
-  summarise(mean = mean(diameter), range = max(diameter) - min(diameter), standard_dev = sd(diameter), count = n())
+  group_by(genus_name) %>%
+  summarise(mean = mean(diameter), range = max(diameter) - min(diameter), standard_dev = sd(diameter), count = n(), mean_height = mean(height_range_id))
   
 head(genus_summary)
 ```
 
-    ## # A tibble: 6 × 5
-    ##   `(genus_name)`  mean range standard_dev count
-    ##   <chr>          <dbl> <dbl>        <dbl> <int>
-    ## 1 ABIES           12.9  41.5         9.71   190
-    ## 2 ACER            10.6 317           8.76 36062
-    ## 3 AESCULUS        23.7  64           9.57  2570
-    ## 4 AILANTHUS       15.9  18.5         8.64     4
-    ## 5 ALBIZIA          6     0          NA        1
-    ## 6 ALNUS           17.5  40           8.94    74
+    ## # A tibble: 6 × 6
+    ##   genus_name  mean range standard_dev count mean_height
+    ##   <chr>      <dbl> <dbl>        <dbl> <int>       <dbl>
+    ## 1 ABIES       12.9  41.5         9.71   190        3.21
+    ## 2 ACER        10.6 317           8.76 36062        2.73
+    ## 3 AESCULUS    23.7  64           9.57  2570        4.60
+    ## 4 AILANTHUS   15.9  18.5         8.64     4        3.5 
+    ## 5 ALBIZIA      6     0          NA        1        2   
+    ## 6 ALNUS       17.5  40           8.94    74        3.99
 
+To get a better sense of this, I’ll plot the height and diameter of each
+genus, with the size of the points scaled by the count of trees in that
+genus. The points will need some transparency so we can see when they
+overlap I’ll label the top few points on the plot. Points will be tr
+
+``` r
+genus_summary %>%
+  ggplot(aes(x=mean, y= mean_height)) +
+  geom_point(aes(size = count, color = genus_name), alpha = 0.7) +
+  geom_text(aes(label = ifelse(mean > 22,as.character(genus_name),''), hjust = -0.1, vjust =0)) +
+  labs(x = "Mean diameter (m)", y = "Mean height index") +
+  scale_color_discrete(guide="none") +
+  xlim(0,55)
+```
+
+![](mini-project-2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+Unfortunately, “castanea” and “salix” overlap, but otherwise, we can see
+the tallest and widest few genera and get a sense of their scale
+relative to other trees.
 <!----------------------------------------------------------------------------->
 
 ### 1.3 (2 points)
