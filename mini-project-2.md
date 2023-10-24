@@ -363,7 +363,7 @@ overlap I’ll label the top few points on the plot. Points will be tr
 ``` r
 genus_summary %>%
   ggplot(aes(x=mean, y= mean_height)) +
-  geom_point(aes(size = count, color = genus_name), alpha = 0.7) +
+  geom_point(aes(size = count, color = genus_name), alpha = 0.5) +
   geom_text(aes(label = ifelse(mean > 22,as.character(genus_name),''), hjust = -0.1, vjust =0)) +
   labs(x = "Mean diameter (m)", y = "Mean height index") +
   scale_color_discrete(guide="none") +
@@ -385,7 +385,36 @@ refined, now that you’ve investigated your data a bit more? Which
 research questions are yielding interesting results?
 
 <!------------------------- Write your answer here ---------------------------->
-<!----------------------------------------------------------------------------->
+
+I have made some progress towards answering all 4 of my research
+questions, although my approach is fairly coarse and qualitative in all
+cases. I know that trees grow taller roughly linearly as they age, and
+that the further east you go trees shrink (although, as noted, it’s not
+clear if this has much to do with the distance from the shore). For a
+more meaningful analysis of both of these questions, I really should be
+limiting myself to a specific species of tree, and perhaps in a specific
+area.
+
+For question 2, I see that even and odd sides of the road are very
+similar, although really I was hoping to get at east/west/north/south
+differences, which has not been elucidated from this example.
+
+For question 4, I have a few genera that grow taller and wider on
+average, but this did not include any controlling for other impacts, of
+which there are many.
+
+A more refined and realizable set of questions might be:
+
+1.  What quantitative relationship exists between the date planted and
+    tree diameter? Can we distinguish or control for the age of a tree
+    when it was planted?
+2.  How does the cardinal direction of a road affect the growth of trees
+    lining the street? Can we predict this effect numerically?
+3.  What relationship does geographic location have on the growth of
+    given species of trees?
+4.  For trees grown in similar conditions and planted at similar times,
+    what species or genus grows to the largest diameter?
+    <!----------------------------------------------------------------------------->
 
 # Task 2: Tidy your data
 
@@ -405,6 +434,31 @@ untidy? Go through all your columns, or if you have \>8 variables, just
 pick 8, and explain whether the data is untidy or tidy.
 
 <!--------------------------- Start your work below --------------------------->
+
+This data is mostly tidy.
+
+The goal is to study trees, each tree occupies a row, and can be seen as
+one observation of a tree. Each column is a variable relating to that
+tree. To discuss the first 8 columns: the tree’s ID is a unique
+identifier. The civic number appears to correspond to a house number. In
+untidy data, this might be combined withe the following column, the
+street name, however separating it like this is much tidier, as it
+allows for analysis per street. Likewise for genus and species. The
+cultivar is yet another independent property. Arguably, the inclusion of
+the common name is untidy, as this is entirely redundant with the genus
+and species. It would be better to separately store a lookup table for
+this information. The “assigned” column has an unclear meaning, which is
+also bad practice (although this is not *necessarily* unitdy).
+
+Looking closely at a few further columns, on_street_block also contains
+only less data than civic_number. on_street and std_street do appear to
+vary from one another, which likely corresponds to two different systems
+for representing the streets location. This is also potentially
+confusing, a better option would be to just pick one system to prevent
+anyone from accidentally using a different system than expected.
+
+However, in terms of the overall structure, the data is tidy.
+
 <!----------------------------------------------------------------------------->
 
 ### 2.2 (4 points)
@@ -419,6 +473,66 @@ Be sure to explain your reasoning for this task. Show us the “before”
 and “after”.
 
 <!--------------------------- Start your work below --------------------------->
+
+Although I mentioned a few non-ideal things, it would be pretty trivial
+to remove and add those columns back, so I’ll untidy the data further.
+
+To untidy it, I’ll do something that is truly a little insane, and
+simply give each numerical variable its own row, such that each row is a
+tree-numerical value combo
+
+``` r
+vancouver_trees_untidy <- vancouver_trees %>%
+  pivot_longer(cols = where(is.numeric) & -tree_id, names_to = "Property", values_to = "Value")
+
+head(vancouver_trees_untidy, n= 15)
+```
+
+    ## # A tibble: 15 × 16
+    ##    tree_id std_street genus_name species_name cultivar_name common_name assigned
+    ##      <dbl> <chr>      <chr>      <chr>        <chr>         <chr>       <chr>   
+    ##  1  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
+    ##  2  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
+    ##  3  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
+    ##  4  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
+    ##  5  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
+    ##  6  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
+    ##  7  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
+    ##  8  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
+    ##  9  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
+    ## 10  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
+    ## 11  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
+    ## 12  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
+    ## 13  149579 WINDSOR ST STYRAX     JAPONICA     <NA>          JAPANESE S… N       
+    ## 14  149579 WINDSOR ST STYRAX     JAPONICA     <NA>          JAPANESE S… N       
+    ## 15  149579 WINDSOR ST STYRAX     JAPONICA     <NA>          JAPANESE S… N       
+    ## # ℹ 9 more variables: root_barrier <chr>, plant_area <chr>, on_street <chr>,
+    ## #   neighbourhood_name <chr>, street_side_name <chr>, curb <chr>,
+    ## #   date_planted <date>, Property <chr>, Value <dbl>
+
+Now to clean it back up:
+
+``` r
+vancouver_trees_retidy <- vancouver_trees_untidy %>%
+  pivot_wider(names_from = Property, values_from = Value)
+
+head(vancouver_trees_retidy)
+```
+
+    ## # A tibble: 6 × 20
+    ##   tree_id std_street genus_name species_name cultivar_name  common_name assigned
+    ##     <dbl> <chr>      <chr>      <chr>        <chr>          <chr>       <chr>   
+    ## 1  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON        BRANDON ELM N       
+    ## 2  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>           JAPANESE Z… N       
+    ## 3  149579 WINDSOR ST STYRAX     JAPONICA     <NA>           JAPANESE S… N       
+    ## 4  149590 E 39TH AV  FRAXINUS   AMERICANA    AUTUMN APPLAU… AUTUMN APP… Y       
+    ## 5  149604 WINDSOR ST ACER       CAMPESTRE    <NA>           HEDGE MAPLE N       
+    ## 6  149616 W 61ST AV  PYRUS      CALLERYANA   CHANTICLEER    CHANTICLEE… N       
+    ## # ℹ 13 more variables: root_barrier <chr>, plant_area <chr>, on_street <chr>,
+    ## #   neighbourhood_name <chr>, street_side_name <chr>, curb <chr>,
+    ## #   date_planted <date>, civic_number <dbl>, on_street_block <dbl>,
+    ## #   height_range_id <dbl>, diameter <dbl>, longitude <dbl>, latitude <dbl>
+
 <!----------------------------------------------------------------------------->
 
 ### 2.3 (4 points)
@@ -430,14 +544,25 @@ analysis in the remaining tasks:
 
 <!-------------------------- Start your work below ---------------------------->
 
-1.  *FILL_THIS_IN*
-2.  *FILL_THIS_IN*
+1.  What quantitative relationship exists between the date planted and
+    tree diameter? Can we distinguish or control for the age of a tree
+    when it was planted?
+2.  How does the cardinal direction of a road affect the growth of trees
+    lining the street? Can we predict this effect numerically?
 
 <!----------------------------------------------------------------------------->
 
 Explain your decision for choosing the above two research questions.
 
 <!--------------------------- Start your work below --------------------------->
+
+I felt that these two questions were some of the most practical to
+answer, without pulling in an abundance of outside data. As well, both
+seemed to have some promising early results that we could dig deeper
+into.
+
+It also appeals to me that the answers to both of these questions have
+practical implications for the purposes of city planning.
 <!----------------------------------------------------------------------------->
 
 Now, try to choose a version of your data that you think will be
@@ -449,6 +574,66 @@ dropping irrelevant columns, etc.).
 data, one for each research question.)
 
 <!--------------------------- Start your work below --------------------------->
+
+I’m going to do some basic clean up that will help with both analyses,
+then eventually split into two, one tibble for each
+
+``` r
+vancouver_trees_clean <- vancouver_trees %>%
+  select(c(tree_id, std_street, genus_name, species_name, street_side_name, diameter,
+           date_planted, longitude, latitude)) %>%
+  na.exclude() %>% #remove rows with NAs
+  mutate(nominal_age = date("2023-10-24") - date_planted) %>% #use the more direct variable of age
+  relocate(nominal_age, .after = tree_id) %>% #Rearrange the date to put the interesting start at the front
+  relocate(diameter, .after = nominal_age) %>%
+  select(-date_planted)
+head(vancouver_trees_clean)
+```
+
+    ## # A tibble: 6 × 9
+    ##   tree_id nominal_age diameter std_street    genus_name species_name
+    ##     <dbl> <drtn>         <dbl> <chr>         <chr>      <chr>       
+    ## 1  149556  9050 days        10 W 58TH AV     ULMUS      AMERICANA   
+    ## 2  149563 10007 days        10 W 58TH AV     ZELKOVA    SERRATA     
+    ## 3  149579 10928 days         4 WINDSOR ST    STYRAX     JAPONICA    
+    ## 4  149590 10039 days        18 E 39TH AV     FRAXINUS   AMERICANA   
+    ## 5  149604 10903 days         9 WINDSOR ST    ACER       CAMPESTRE   
+    ## 6  149617 10904 days        15 SHERBROOKE ST ACER       PLATANOIDES 
+    ## # ℹ 3 more variables: street_side_name <chr>, longitude <dbl>, latitude <dbl>
+
+Now I’ll make a version for my question 1, which only requires selecting
+a few fewer variables. Realistically, we would also eventually want to
+filter to one specific species, but some more work is required to pick a
+species that has a large number of species planted over a wide range of
+dates.
+
+``` r
+vancouver_trees_q1 <- vancouver_trees_clean %>%
+  select(c(tree_id, nominal_age, diameter, longitude, latitude))
+```
+
+For question 2, I want to create a categorical variable that says
+whether a tree is on the north, south, east or west side of the street.
+Luckily, in Vancouver, the odd side of the road is north on an avenue
+and west on a street, and the opposite for the even. We can work from
+this.
+
+``` r
+vancouver_trees_q2 <- vancouver_trees_clean %>%
+  filter(street_side_name %in% c("EVEN", "ODD")) %>% #We can only work with even or odd
+  filter(str_ends(std_street, "AV") | str_ends(std_street, "ST")) %>%
+  mutate(street_side = case_when(
+    str_ends(std_street, "AV") & street_side_name == "ODD" ~ "north",
+    str_ends(std_street, "AV") & street_side_name == "EVEN" ~ "south",
+    str_ends(std_street, "ST") & street_side_name == "ODD" ~ "east",
+    str_ends(std_street, "ST") & street_side_name == "EVEN" ~ "west",
+  ))
+```
+
+Of course, this won’t be perfect, because not all streets and avenues
+are perfectly parallel, and I can’t guarantee that the naming and
+numbering scheme are 100% consistent, but this should split things up
+reasonably
 
 # Task 3: Modelling
 
