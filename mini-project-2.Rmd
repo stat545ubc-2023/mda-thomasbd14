@@ -42,7 +42,7 @@ By the end of this milestone, you should:
 
 Begin by loading your data and the tidyverse package below:
 
-```{r, message = FALSE}
+```{R, message = FALSE}
 library(datateachr) # <- might contain the data you picked!
 library(tidyverse)
 ```
@@ -56,10 +56,10 @@ From milestone 1, you should have an idea of the basic structure of your dataset
 First, write out the 4 research questions you defined in milestone 1 were. This will guide your work through milestone 2:
 
 <!-------------------------- Start your work below ---------------------------->
-1. *FILL_THIS_IN*
-2. *FILL_THIS_IN*
-3. *FILL_THIS_IN*
-4. *FILL_THIS_IN*
+1. How is tree diameter affected by the date planted?
+2. How does the road side affect tree growth (this is in `street_side_name`)?
+3. How is tree growth affected by distance to the coast?
+4. Given the above factors, which tree species grows the largest?
 <!----------------------------------------------------------------------------->
 
 Here, we will investigate your data using various data manipulation and graphing functions.
@@ -92,6 +92,133 @@ Using variables and/or tables you made in one of the "Summarizing" tasks:
 Make sure it's clear what research question you are doing each operation for!
 
 <!------------------------- Start your work below ----------------------------->
+#### Question 1: age and diameter
+
+To start, I'll turn age into a categorical variable, splitting into "young," "middle"
+and "old," to better understand the lifecycle of the trees, first removing the rows
+where the date is not available.
+
+```{R}
+
+trees_age <-
+  vancouver_trees %>%
+  filter(!is.na(date_planted)) %>%
+  mutate(age_class = factor(case_when(
+                               date_planted < "1990-01-01" ~ "very old",
+                               date_planted <  "1995-01-01" ~ "old",
+                               date_planted < "2005-01-01" ~ "middle",
+                               date_planted < "2015-01-01" ~ "young",
+                               .default = "very young"),c("very young", "young","middle","old", "very old")))
+
+head(trees_age)
+```
+Now, for fun, we can get the counts of the ages:
+```{R}
+trees_age %>%
+  group_by(age_class) %>%
+  summarize(count = n())
+```
+Next, we can plot the age in our new categories against the diameter.
+We will overlay a line, to make the trend clearer.
+
+```{R}
+trees_age %>% 
+  group_by(age_class) %>%
+  summarize(mean_diameter = mean(diameter)) %>%
+  ggplot(aes(x = age_class, y = mean_diameter)) +
+  geom_col()+
+  geom_line(aes(x = as.numeric(age_class)))+
+  labs(x = "Tree age", y = "Tree diameter (m)")
+  
+
+```
+There is a shockingly linear relationship between age and diameter, although it appears
+slower between "very young" and "young." This is likely because trees are not planted as saplings,
+so using "date planted" to mean "age" is not quite accurate
+
+### Question 2: Road side and tree diameter
+
+For this one, we will compute the mean, range, standard deviation, and max  height for each road side.
+```{R}
+road_side_summary <- vancouver_trees %>%
+  filter(!is.na(diameter)) %>%
+  filter(!is.na(street_side_name)) %>%
+  group_by(street_side_name) %>%
+  summarise(mean = mean(diameter), range = max(diameter) - min(diameter), standard_dev = sd(diameter), count = n())
+  
+road_side_summary
+```
+Let's visualize this graphically, plotting the mean, with the standard deviation
+overlaid in red
+```{R}
+road_side_summary %>% ggplot(aes(x = street_side_name))+
+  geom_col(aes(y = mean, fill = "Mean Diameter")) +
+  geom_col(aes(y = standard_dev, fill = "Standard Deviation in Diameter"), alpha = 0.5)+
+  labs(x = "street side", y = "Mean diameter/standard deviation")
+  
+```
+The standard deviation of the diameter is very large throughout, other than the 
+bike median category. This suggests that we need to use caution and large sample sizes
+when working with this data.
+### Question 3: Tree diameter and distance to coast
+In a perfect world, I would have liked to have created a definition of the coast line.
+It should be feasible to define the boundaries of tree locations, and we know that
+the north and south boundaries are right next to the water, as well as the area 
+surrounding downtown.
+As a first-pass approximation, I am going to simply use the longitude, as this should roughly
+approximate the distance to the open ocean - we are ignoring the effects of False Creek,
+the Fraser River, etc.
+I'm 
+```{R}
+
+trees_long <-
+  vancouver_trees %>%
+  filter(!is.na(longitude)) %>%
+  filter(!is.na(diameter)) %>%
+  mutate(westness = factor(case_when(
+                               longitude < -123.18 ~ "far west",
+                               longitude <  -123.14 ~ "west",
+                               longitude < -123.10 ~ "middle",
+                               longitude < -123.06 ~ "east",
+                               .default = "far east"),c("far west", "west","middle","east", "far east")))
+
+head(trees_age)
+```
+We can again check the counts to make sure this is reasonable.
+```{R}
+trees_long %>%
+  group_by(westness) %>%
+  summarize(count = n())
+```
+
+
+```{R}
+trees_long %>% 
+  group_by(westness) %>%
+  summarize(mean_diameter = mean(diameter)) %>%
+  ggplot(aes(x = westness, y = mean_diameter)) +
+  geom_col()+
+  geom_line(aes(x = as.numeric(westness)))+
+  labs(x = "Distance west in Vancouver", y = "Tree diameter (m)")
+```
+More than I expected, trees do appear to be shorter the further east we go.
+However, it is entirely unclear whether this is due to distance to the coast, or
+some other factor such as the relative wealth, densities and ages of these neighbourhoods.
+### Question 4
+My intention with this question was to control for the effects I had found above,
+but to start, let me just compare the diameters outright.
+As well, to make it more manageable, I will look at the genus rather than the species
+
+First, let me summarize some key statistics of each genus.
+```{R}
+genus_summary <- vancouver_trees %>%
+  filter(!is.na(diameter)) %>%
+  filter(!is.na(genus_name)) %>%
+  group_by((genus_name)) %>%
+  summarise(mean = mean(diameter), range = max(diameter) - min(diameter), standard_dev = sd(diameter), count = n())
+  
+head(genus_summary)
+```
 
 <!----------------------------------------------------------------------------->
 
@@ -119,7 +246,6 @@ A reminder of the definition of *tidy* data:
 Based on the definition above, can you identify if your data is tidy or untidy? Go through all your columns, or if you have \>8 variables, just pick 8, and explain whether the data is untidy or tidy.
 
 <!--------------------------- Start your work below --------------------------->
-
 <!----------------------------------------------------------------------------->
 
 ### 2.2 (4 points)
