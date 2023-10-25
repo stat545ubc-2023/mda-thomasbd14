@@ -417,9 +417,9 @@ Pick a research question from 1.2, and pick a variable of interest (we'll call i
 
 <!-------------------------- Start your work below ---------------------------->
 
-**Research Question**: FILL_THIS_IN
+**Research Question**: What quantitative relationship exists between the date planted and tree diameter?
 
-**Variable of interest**: FILL_THIS_IN
+**Variable of interest**: Tree diameter
 
 <!----------------------------------------------------------------------------->
 
@@ -435,6 +435,11 @@ Fit a model or run a hypothesis test that provides insight on this variable with
 
 <!-------------------------- Start your work below ---------------------------->
 
+```{R}
+diam_v_age <- lm(diameter ~ nominal_age, vancouver_trees_q2)
+
+diam_v_age
+```
 <!----------------------------------------------------------------------------->
 
 ## 3.2 (3 points)
@@ -446,6 +451,18 @@ Produce something relevant from your fitted model: either predictions on Y, or a
 -   Obtain your results using the `broom` package if possible. If your model is not compatible with the broom function you're needing, then you can obtain your results by some other means, but first indicate which broom function is not compatible.
 
 <!-------------------------- Start your work below ---------------------------->
+I will take a look at the p value, to see how well these correlate
+
+```{R}
+lm_tidy <- broom::tidy(diam_v_age)
+
+print(lm_tidy %>% select(c(term, p.value)))
+
+```
+Here, the value I'm mainly interested is the bottom left of this table. In fact,
+it would appear that the assocation is so significant, that the p value has rounded
+all the way down to zero. This perhaps isn't too surprising given what we saw in
+section 1.
 
 <!----------------------------------------------------------------------------->
 

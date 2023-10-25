@@ -645,9 +645,10 @@ these.
 
 <!-------------------------- Start your work below ---------------------------->
 
-**Research Question**: FILL_THIS_IN
+**Research Question**: What quantitative relationship exists between the
+date planted and tree diameter?
 
-**Variable of interest**: FILL_THIS_IN
+**Variable of interest**: Tree diameter
 
 <!----------------------------------------------------------------------------->
 
@@ -674,6 +675,21 @@ specifics in STAT 545.
         coefficients.
 
 <!-------------------------- Start your work below ---------------------------->
+
+``` r
+diam_v_age <- lm(diameter ~ nominal_age, vancouver_trees_q2)
+
+diam_v_age
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = diameter ~ nominal_age, data = vancouver_trees_q2)
+    ## 
+    ## Coefficients:
+    ## (Intercept)  nominal_age  
+    ##  -0.3414655    0.0008618
+
 <!----------------------------------------------------------------------------->
 
 ## 3.2 (3 points)
@@ -691,6 +707,26 @@ Y, or a single value like a regression coefficient or a p-value.
     which broom function is not compatible.
 
 <!-------------------------- Start your work below ---------------------------->
+
+I will take a look at the p value, to see how well these correlate
+
+``` r
+lm_tidy <- broom::tidy(diam_v_age)
+
+print(lm_tidy %>% select(c(term, p.value)))
+```
+
+    ## # A tibble: 2 × 2
+    ##   term             p.value
+    ##   <chr>              <dbl>
+    ## 1 (Intercept) 0.0000000126
+    ## 2 nominal_age 0
+
+Here, the value I’m mainly interested is the bottom left of this table.
+In fact, it would appear that the assocation is so significant, that the
+p value has rounded all the way down to zero. This perhaps isn’t too
+surprising given what we saw in section 1.
+
 <!----------------------------------------------------------------------------->
 
 # Task 4: Reading and writing data
