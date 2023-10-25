@@ -71,6 +71,7 @@ Begin by loading your data and the tidyverse package below:
 ``` r
 library(datateachr) # <- might contain the data you picked!
 library(tidyverse)
+library(here)
 ```
 
 # Task 1: Process and summarize your data
@@ -748,6 +749,14 @@ file in your `output` folder. Use the `here::here()` function.
     file, and remake it simply by knitting this Rmd file.
 
 <!-------------------------- Start your work below ---------------------------->
+
+``` r
+if(!dir.exists(here("output"))){
+  dir.create(here("output"))
+}
+write_csv(road_side_summary, here("output", "road_size_summary.csv"))
+```
+
 <!----------------------------------------------------------------------------->
 
 ## 4.2 (3 points)
@@ -760,6 +769,28 @@ Use the functions `saveRDS()` and `readRDS()`.
     here.
 
 <!-------------------------- Start your work below ---------------------------->
+
+``` r
+if(!dir.exists(here("output"))){
+  dir.create(here("output"))
+}
+rds_path = here("output", "diam_v_age.rds")
+
+saveRDS(diam_v_age, rds_path)
+
+new_diam_v_age <- readRDS(rds_path)
+
+new_diam_v_age
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = diameter ~ nominal_age, data = vancouver_trees_q2)
+    ## 
+    ## Coefficients:
+    ## (Intercept)  nominal_age  
+    ##  -0.3414655    0.0008618
+
 <!----------------------------------------------------------------------------->
 
 # Overall Reproducibility/Cleanliness/Coherence Checklist

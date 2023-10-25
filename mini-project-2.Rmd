@@ -45,6 +45,7 @@ Begin by loading your data and the tidyverse package below:
 ```{R, message = FALSE}
 library(datateachr) # <- might contain the data you picked!
 library(tidyverse)
+library(here)
 ```
 
 # Task 1: Process and summarize your data 
@@ -478,7 +479,12 @@ Take a summary table that you made from Task 1, and write it as a csv file in yo
 -   **Reproducibility criteria**: You should be able to delete the csv file, and remake it simply by knitting this Rmd file.
 
 <!-------------------------- Start your work below ---------------------------->
-
+```{R}
+if(!dir.exists(here("output"))){
+  dir.create(here("output"))
+}
+write_csv(road_side_summary, here("output", "road_size_summary.csv"))
+```
 <!----------------------------------------------------------------------------->
 
 ## 4.2 (3 points)
@@ -488,7 +494,18 @@ Write your model object from Task 3 to an R binary file (an RDS), and load it ag
 -   The same robustness and reproducibility criteria as in 4.1 apply here.
 
 <!-------------------------- Start your work below ---------------------------->
+```{R}
+if(!dir.exists(here("output"))){
+  dir.create(here("output"))
+}
+rds_path = here("output", "diam_v_age.rds")
 
+saveRDS(diam_v_age, rds_path)
+
+new_diam_v_age <- readRDS(rds_path)
+
+new_diam_v_age
+```
 <!----------------------------------------------------------------------------->
 
 # Overall Reproducibility/Cleanliness/Coherence Checklist 
