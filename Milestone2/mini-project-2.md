@@ -201,6 +201,11 @@ trees_age %>%
     ## 4 old         7490
     ## 5 very old     300
 
+This will be helpful in the plotting page, but also tells as that most
+trees are not very old, which lets us know that we can only understand
+this relationship with high confidence for the earlier part of the tree
+lifecycle.
+
 Next, we can plot the age in our new categories against the diameter. We
 will overlay a line, to make the trend clearer.
 
@@ -214,11 +219,12 @@ trees_age %>%
   labs(x = "Tree age", y = "Tree diameter (m)")
 ```
 
-![](mini-project-2_files/figure-gfm/unnamed-chunk-4-1.png)<!-- --> There
-is a shockingly linear relationship between age and diameter, although
-it appears slower between “very young” and “young.” This is likely
-because trees are not planted as saplings, so using “date planted” to
-mean “age” is not quite accurate
+![](mini-project-2_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+There is a shockingly linear relationship between age and diameter,
+although it appears slower between “very young” and “young.” This is
+likely because trees are not planted as saplings, so using “date
+planted” to mean “age” is not quite accurate
 
 ### Question 2: Road side and tree diameter
 
@@ -230,43 +236,49 @@ road_side_summary <- vancouver_trees %>%
   filter(!is.na(diameter)) %>%
   filter(!is.na(street_side_name)) %>%
   group_by(street_side_name) %>%
-  summarise(mean = mean(diameter), range = max(diameter) - min(diameter), standard_dev = sd(diameter), count = n())
+  summarise(mean_diam = mean(diameter), diam_range = max(diameter) - min(diameter), diam_standard_dev = sd(diameter), count = n())
   
 road_side_summary
 ```
 
     ## # A tibble: 6 × 5
-    ##   street_side_name  mean range standard_dev count
-    ##   <chr>            <dbl> <dbl>        <dbl> <int>
-    ## 1 BIKE MED          3.01   0.5       0.0811    38
-    ## 2 EVEN             11.5  305         9.13   71753
-    ## 3 GREENWAY         16.4   25        10.6        5
-    ## 4 MED               8.08  98.5       9.03    3297
-    ## 5 ODD              11.7  435         9.27   71374
-    ## 6 PARK              3.19  27         2.25     144
+    ##   street_side_name mean_diam diam_range diam_standard_dev count
+    ##   <chr>                <dbl>      <dbl>             <dbl> <int>
+    ## 1 BIKE MED              3.01        0.5            0.0811    38
+    ## 2 EVEN                 11.5       305              9.13   71753
+    ## 3 GREENWAY             16.4        25             10.6        5
+    ## 4 MED                   8.08       98.5            9.03    3297
+    ## 5 ODD                  11.7       435              9.27   71374
+    ## 6 PARK                  3.19       27              2.25     144
+
+This gives us a sense of what data we have available, and a course look
+at the effect of interest.
 
 Let’s visualize this graphically, plotting the mean, with the standard
 deviation overlaid in red
 
 ``` r
 road_side_summary %>% ggplot(aes(x = street_side_name))+
-  geom_col(aes(y = mean, fill = "Mean Diameter")) +
-  geom_col(aes(y = standard_dev, fill = "Standard Deviation in Diameter"), alpha = 0.5)+
-  labs(x = "street side", y = "Mean diameter/standard deviation")
+  geom_col(aes(y = mean_diam, fill = "Mean Diameter")) +
+  geom_col(aes(y = diam_standard_dev, fill = "Standard Deviation in Diameter"), alpha = 0.5)+
+  labs(x = "Street side", y = "Mean diameter/standard deviation")
 ```
 
-![](mini-project-2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- --> The
-standard deviation of the diameter is very large throughout, other than
-the bike median category. This suggests that we need to use caution and
-large sample sizes when working with this data. ### Question 3: Tree
-diameter and distance to coast In a perfect world, I would have liked to
-have created a definition of the coast line. It should be feasible to
-define the boundaries of tree locations, and we know that the north and
-south boundaries are right next to the water, as well as the area
-surrounding downtown. As a first-pass approximation, I am going to
-simply use the longitude, as this should roughly approximate the
-distance to the open ocean - we are ignoring the effects of False Creek,
-the Fraser River, etc.
+![](mini-project-2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+The standard deviation of the diameter is very large throughout, other
+than the bike median category. This suggests that we need to use caution
+and large sample sizes when working with this data.
+
+### Question 3: Tree diameter and distance to coast
+
+In a perfect world, I would have liked to have created a definition of
+the coast line. It should be feasible to define the boundaries of tree
+locations, and we know that the north and south boundaries are right
+next to the water, as well as the area surrounding downtown. As a
+first-pass approximation, I am going to simply use the longitude, as
+this should roughly approximate the distance to the open ocean - we are
+ignoring the effects of False Creek, the Fraser River, etc.
 
 ``` r
 trees_long <-
@@ -315,6 +327,11 @@ trees_long %>%
     ## 4 east     30204
     ## 5 far east 28158
 
+This again gives us a sense of the location of trees. We see that it
+skews a little towards the middle of town. However, each bin is
+sufficently large that we don’t need to worry about variance from small
+sample sizes
+
 ``` r
 trees_long %>% 
   group_by(westness) %>%
@@ -325,14 +342,19 @@ trees_long %>%
   labs(x = "Distance west in Vancouver", y = "Tree diameter (m)")
 ```
 
-![](mini-project-2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- --> More
-than I expected, trees do appear to be shorter the further east we go.
-However, it is entirely unclear whether this is due to distance to the
-coast, or some other factor such as the relative wealth, densities and
-ages of these neighbourhoods. ### Question 4 My intention with this
-question was to control for the effects I had found above, but to start,
-let me just compare the diameters outright. As well, to make it more
-manageable, I will look at the genus rather than the species
+![](mini-project-2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+With a stronger effect than I expected, trees do appear to be shorter
+the further east we go. However, it is entirely unclear whether this is
+due to distance to the coast, or some other factor such as the relative
+wealth, densities and ages of these neighbourhoods.
+
+### Question 4
+
+My intention with this question was to control for the effects I had
+found above, but to start, let me just compare the diameters outright.
+As well, to make it more manageable, I will look at the genus rather
+than the species
 
 First, let me summarize some key statistics of each genus.
 
@@ -356,10 +378,13 @@ head(genus_summary)
     ## 5 ALBIZIA      6     0          NA        1        2   
     ## 6 ALNUS       17.5  40           8.94    74        3.99
 
+Already, we can see that the diameter ranges substantially between
+genera, and could by hand pick out a few trees that seem to grow well.
+
 To get a better sense of this, I’ll plot the height and diameter of each
 genus, with the size of the points scaled by the count of trees in that
 genus. The points will need some transparency so we can see when they
-overlap I’ll label the top few points on the plot. Points will be tr
+overlap I’ll label the top few points on the plot.
 
 ``` r
 genus_summary %>%
@@ -372,6 +397,7 @@ genus_summary %>%
 ```
 
 ![](mini-project-2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
 Unfortunately, “castanea” and “salix” overlap, but otherwise, we can see
 the tallest and widest few genera and get a sense of their scale
 relative to other trees.
@@ -390,11 +416,11 @@ research questions are yielding interesting results?
 I have made some progress towards answering all 4 of my research
 questions, although my approach is fairly coarse and qualitative in all
 cases. I know that trees grow taller roughly linearly as they age, and
-that the further east you go trees shrink (although, as noted, it’s not
-clear if this has much to do with the distance from the shore). For a
-more meaningful analysis of both of these questions, I really should be
-limiting myself to a specific species of tree, and perhaps in a specific
-area.
+that the further east you go, the smaller trees tend to (although, as
+noted above, it’s not clear if this has much to do with the distance
+from the shore). For a more meaningful analysis of both of these
+questions, I really should be limiting myself to a specific species of
+tree, and perhaps in a specific area.
 
 For question 2, I see that even and odd sides of the road are very
 similar, although really I was hoping to get at east/west/north/south
@@ -402,13 +428,14 @@ differences, which has not been elucidated from this example.
 
 For question 4, I have a few genera that grow taller and wider on
 average, but this did not include any controlling for other impacts, of
-which there are many.
+which there are many. For instance, it may be that the genera that
+appear to “grow best” are just ones that happened to only have been
+planted a long time ago, and have thus had lots of time to grow.
 
 A more refined and realizable set of questions might be:
 
 1.  What quantitative relationship exists between the date planted and
-    tree diameter? Can we distinguish or control for the age of a tree
-    when it was planted?
+    tree diameter?
 2.  How does the cardinal direction of a road affect the growth of trees
     lining the street? Can we predict this effect numerically?
 3.  What relationship does geographic location have on the growth of
@@ -442,19 +469,20 @@ The goal is to study trees, each tree occupies a row, and can be seen as
 one observation of a tree. Each column is a variable relating to that
 tree. To discuss the first 8 columns: the tree’s ID is a unique
 identifier. The civic number appears to correspond to a house number. In
-untidy data, this might be combined withe the following column, the
-street name, however separating it like this is much tidier, as it
-allows for analysis per street. Likewise for genus and species. The
-cultivar is yet another independent property. Arguably, the inclusion of
-the common name is untidy, as this is entirely redundant with the genus
-and species. It would be better to separately store a lookup table for
-this information. The “assigned” column has an unclear meaning, which is
-also bad practice (although this is not *necessarily* unitdy).
+untidy data, this might be combined with the following column, the
+street name, however separating it like this is much nicer, as these are
+really two separate variables, and this allows for analysis per street.
+Likewise for genus and species. The cultivar is yet another independent
+property. Arguably, the inclusion of the common name is untidy, as this
+is entirely redundant with the genus and species. It would be better to
+separately store a lookup table for this information. The “assigned”
+column has an unclear meaning, which is also bad practice (although this
+is not *necessarily* untidy).
 
 Looking closely at a few further columns, on_street_block also contains
-only less data than civic_number. on_street and std_street do appear to
-vary from one another, which likely corresponds to two different systems
-for representing the streets location. This is also potentially
+strictly less data than civic_number. on_street and std_street do appear
+to vary from one another, which likely corresponds to two different
+systems for representing the streets location. This is also potentially
 confusing, a better option would be to just pick one system to prevent
 anyone from accidentally using a different system than expected.
 
@@ -484,55 +512,58 @@ tree-numerical value combo
 
 ``` r
 vancouver_trees_untidy <- vancouver_trees %>%
-  pivot_longer(cols = where(is.numeric) & -tree_id, names_to = "Property", values_to = "Value")
+  pivot_longer(cols = where(is.numeric) & -tree_id, names_to = "Property", values_to = "Value") %>%
+  relocate(c("Property", "Value"), .after = tree_id) #ensure the new columns are near the start
 
 head(vancouver_trees_untidy, n= 15)
 ```
 
     ## # A tibble: 15 × 16
-    ##    tree_id std_street genus_name species_name cultivar_name common_name assigned
-    ##      <dbl> <chr>      <chr>      <chr>        <chr>         <chr>       <chr>   
-    ##  1  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
-    ##  2  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
-    ##  3  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
-    ##  4  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
-    ##  5  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
-    ##  6  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON       BRANDON ELM N       
-    ##  7  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
-    ##  8  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
-    ##  9  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
-    ## 10  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
-    ## 11  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
-    ## 12  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>          JAPANESE Z… N       
-    ## 13  149579 WINDSOR ST STYRAX     JAPONICA     <NA>          JAPANESE S… N       
-    ## 14  149579 WINDSOR ST STYRAX     JAPONICA     <NA>          JAPANESE S… N       
-    ## 15  149579 WINDSOR ST STYRAX     JAPONICA     <NA>          JAPANESE S… N       
-    ## # ℹ 9 more variables: root_barrier <chr>, plant_area <chr>, on_street <chr>,
-    ## #   neighbourhood_name <chr>, street_side_name <chr>, curb <chr>,
-    ## #   date_planted <date>, Property <chr>, Value <dbl>
+    ##    tree_id Property       Value std_street genus_name species_name cultivar_name
+    ##      <dbl> <chr>          <dbl> <chr>      <chr>      <chr>        <chr>        
+    ##  1  149556 civic_number   494   W 58TH AV  ULMUS      AMERICANA    BRANDON      
+    ##  2  149556 on_street_bl…  400   W 58TH AV  ULMUS      AMERICANA    BRANDON      
+    ##  3  149556 height_range…    2   W 58TH AV  ULMUS      AMERICANA    BRANDON      
+    ##  4  149556 diameter        10   W 58TH AV  ULMUS      AMERICANA    BRANDON      
+    ##  5  149556 longitude     -123.  W 58TH AV  ULMUS      AMERICANA    BRANDON      
+    ##  6  149556 latitude        49.2 W 58TH AV  ULMUS      AMERICANA    BRANDON      
+    ##  7  149563 civic_number   450   W 58TH AV  ZELKOVA    SERRATA      <NA>         
+    ##  8  149563 on_street_bl…  400   W 58TH AV  ZELKOVA    SERRATA      <NA>         
+    ##  9  149563 height_range…    4   W 58TH AV  ZELKOVA    SERRATA      <NA>         
+    ## 10  149563 diameter        10   W 58TH AV  ZELKOVA    SERRATA      <NA>         
+    ## 11  149563 longitude     -123.  W 58TH AV  ZELKOVA    SERRATA      <NA>         
+    ## 12  149563 latitude        49.2 W 58TH AV  ZELKOVA    SERRATA      <NA>         
+    ## 13  149579 civic_number  4994   WINDSOR ST STYRAX     JAPONICA     <NA>         
+    ## 14  149579 on_street_bl… 4900   WINDSOR ST STYRAX     JAPONICA     <NA>         
+    ## 15  149579 height_range…    3   WINDSOR ST STYRAX     JAPONICA     <NA>         
+    ## # ℹ 9 more variables: common_name <chr>, assigned <chr>, root_barrier <chr>,
+    ## #   plant_area <chr>, on_street <chr>, neighbourhood_name <chr>,
+    ## #   street_side_name <chr>, curb <chr>, date_planted <date>
 
 Now to clean it back up:
 
 ``` r
 vancouver_trees_retidy <- vancouver_trees_untidy %>%
-  pivot_wider(names_from = Property, values_from = Value)
+  pivot_wider(names_from = Property, values_from = Value) %>%
+  relocate(where(is.numeric), .after = tree_id) #to illustrate
 
 head(vancouver_trees_retidy)
 ```
 
     ## # A tibble: 6 × 20
-    ##   tree_id std_street genus_name species_name cultivar_name  common_name assigned
-    ##     <dbl> <chr>      <chr>      <chr>        <chr>          <chr>       <chr>   
-    ## 1  149556 W 58TH AV  ULMUS      AMERICANA    BRANDON        BRANDON ELM N       
-    ## 2  149563 W 58TH AV  ZELKOVA    SERRATA      <NA>           JAPANESE Z… N       
-    ## 3  149579 WINDSOR ST STYRAX     JAPONICA     <NA>           JAPANESE S… N       
-    ## 4  149590 E 39TH AV  FRAXINUS   AMERICANA    AUTUMN APPLAU… AUTUMN APP… Y       
-    ## 5  149604 WINDSOR ST ACER       CAMPESTRE    <NA>           HEDGE MAPLE N       
-    ## 6  149616 W 61ST AV  PYRUS      CALLERYANA   CHANTICLEER    CHANTICLEE… N       
-    ## # ℹ 13 more variables: root_barrier <chr>, plant_area <chr>, on_street <chr>,
+    ##   tree_id civic_number on_street_block height_range_id diameter longitude
+    ##     <dbl>        <dbl>           <dbl>           <dbl>    <dbl>     <dbl>
+    ## 1  149556          494             400               2       10     -123.
+    ## 2  149563          450             400               4       10     -123.
+    ## 3  149579         4994            4900               3        4     -123.
+    ## 4  149590          858             800               4       18     -123.
+    ## 5  149604         5032            5000               2        9     -123.
+    ## 6  149616          585             500               2        5     -123.
+    ## # ℹ 14 more variables: latitude <dbl>, std_street <chr>, genus_name <chr>,
+    ## #   species_name <chr>, cultivar_name <chr>, common_name <chr>, assigned <chr>,
+    ## #   root_barrier <chr>, plant_area <chr>, on_street <chr>,
     ## #   neighbourhood_name <chr>, street_side_name <chr>, curb <chr>,
-    ## #   date_planted <date>, civic_number <dbl>, on_street_block <dbl>,
-    ## #   height_range_id <dbl>, diameter <dbl>, longitude <dbl>, latitude <dbl>
+    ## #   date_planted <date>
 
 <!----------------------------------------------------------------------------->
 
@@ -587,7 +618,7 @@ vancouver_trees_clean <- vancouver_trees %>%
   mutate(nominal_age = date("2023-10-24") - date_planted) %>% #use the more direct variable of age
   relocate(nominal_age, .after = tree_id) %>% #Rearrange the date to put the interesting start at the front
   relocate(diameter, .after = nominal_age) %>%
-  select(-date_planted)
+  select(-date_planted) #get rid of the residual variable
 head(vancouver_trees_clean)
 ```
 
@@ -602,11 +633,11 @@ head(vancouver_trees_clean)
     ## 6  149617 10904 days        15 SHERBROOKE ST ACER       PLATANOIDES 
     ## # ℹ 3 more variables: street_side_name <chr>, longitude <dbl>, latitude <dbl>
 
-Now I’ll make a version for my question 1, which only requires selecting
-a few fewer variables. Realistically, we would also eventually want to
-filter to one specific species, but some more work is required to pick a
-species that has a large number of species planted over a wide range of
-dates.
+Now I’ll make a version for my question 1, which only requires removing
+a few unnecessary variables. Realistically, we would also eventually
+want to filter to one specific species, but some more work is required
+to pick a species that has a large number of species planted over a wide
+range of dates.
 
 ``` r
 vancouver_trees_q1 <- vancouver_trees_clean %>%
@@ -628,8 +659,22 @@ vancouver_trees_q2 <- vancouver_trees_clean %>%
     str_ends(std_street, "AV") & street_side_name == "EVEN" ~ "south",
     str_ends(std_street, "ST") & street_side_name == "ODD" ~ "east",
     str_ends(std_street, "ST") & street_side_name == "EVEN" ~ "west",
-  ))
+  )) %>%
+  relocate(street_side, .after = tree_id)
+
+head(vancouver_trees_q2)
 ```
+
+    ## # A tibble: 6 × 10
+    ##   tree_id street_side nominal_age diameter std_street    genus_name species_name
+    ##     <dbl> <chr>       <drtn>         <dbl> <chr>         <chr>      <chr>       
+    ## 1  149556 south        9050 days        10 W 58TH AV     ULMUS      AMERICANA   
+    ## 2  149563 south       10007 days        10 W 58TH AV     ZELKOVA    SERRATA     
+    ## 3  149579 west        10928 days         4 WINDSOR ST    STYRAX     JAPONICA    
+    ## 4  149590 south       10039 days        18 E 39TH AV     FRAXINUS   AMERICANA   
+    ## 5  149604 west        10903 days         9 WINDSOR ST    ACER       CAMPESTRE   
+    ## 6  149617 east        10904 days        15 SHERBROOKE ST ACER       PLATANOIDES 
+    ## # ℹ 3 more variables: street_side_name <chr>, longitude <dbl>, latitude <dbl>
 
 Of course, this won’t be perfect, because not all streets and avenues
 are perfectly parallel, and I can’t guarantee that the naming and
@@ -723,10 +768,10 @@ print(lm_tidy %>% select(c(term, p.value)))
     ## 1 (Intercept) 0.0000000126
     ## 2 nominal_age 0
 
-Here, the value I’m mainly interested is the bottom left of this table.
-In fact, it would appear that the assocation is so significant, that the
-p value has rounded all the way down to zero. This perhaps isn’t too
-surprising given what we saw in section 1.
+Here, the value I’m mainly interested is the bottom right of this table.
+In fact, it would appear that the association is so significant, that
+the p value has rounded all the way down to zero. This perhaps isn’t too
+surprising given what we saw in section 1.2!
 
 <!----------------------------------------------------------------------------->
 

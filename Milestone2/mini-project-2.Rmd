@@ -119,6 +119,11 @@ trees_age %>%
   group_by(age_class) %>%
   summarize(count = n())
 ```
+
+This will be helpful in the plotting page, but also tells as that most trees 
+are not very old, which lets us know that we can only understand this relationship
+with high confidence for the earlier part of the tree lifecycle.
+
 Next, we can plot the age in our new categories against the diameter.
 We will overlay a line, to make the trend clearer.
 
@@ -133,6 +138,7 @@ trees_age %>%
   
 
 ```
+
 There is a shockingly linear relationship between age and diameter, although it appears
 slower between "very young" and "young." This is likely because trees are not planted as saplings,
 so using "date planted" to mean "age" is not quite accurate
@@ -145,22 +151,27 @@ road_side_summary <- vancouver_trees %>%
   filter(!is.na(diameter)) %>%
   filter(!is.na(street_side_name)) %>%
   group_by(street_side_name) %>%
-  summarise(mean = mean(diameter), range = max(diameter) - min(diameter), standard_dev = sd(diameter), count = n())
+  summarise(mean_diam = mean(diameter), diam_range = max(diameter) - min(diameter), diam_standard_dev = sd(diameter), count = n())
   
 road_side_summary
 ```
+
+This gives us a sense of what data we have available, and a course look at the effect of interest.
+
 Let's visualize this graphically, plotting the mean, with the standard deviation
 overlaid in red
 ```{R}
 road_side_summary %>% ggplot(aes(x = street_side_name))+
-  geom_col(aes(y = mean, fill = "Mean Diameter")) +
-  geom_col(aes(y = standard_dev, fill = "Standard Deviation in Diameter"), alpha = 0.5)+
-  labs(x = "street side", y = "Mean diameter/standard deviation")
+  geom_col(aes(y = mean_diam, fill = "Mean Diameter")) +
+  geom_col(aes(y = diam_standard_dev, fill = "Standard Deviation in Diameter"), alpha = 0.5)+
+  labs(x = "Street side", y = "Mean diameter/standard deviation")
   
 ```
+
 The standard deviation of the diameter is very large throughout, other than the 
 bike median category. This suggests that we need to use caution and large sample sizes
 when working with this data.
+
 ### Question 3: Tree diameter and distance to coast
 In a perfect world, I would have liked to have created a definition of the coast line.
 It should be feasible to define the boundaries of tree locations, and we know that
@@ -191,6 +202,9 @@ trees_long %>%
   summarize(count = n())
 ```
 
+This again gives us a sense of the location of trees. We see that it skews a little
+towards the middle of town. However, each bin is sufficently large that we don't need
+to worry about variance from small sample sizes
 
 ```{R}
 trees_long %>% 
@@ -201,9 +215,11 @@ trees_long %>%
   geom_line(aes(x = as.numeric(westness)))+
   labs(x = "Distance west in Vancouver", y = "Tree diameter (m)")
 ```
-More than I expected, trees do appear to be shorter the further east we go.
+
+With a stronger effect than I expected, trees do appear to be shorter the further east we go.
 However, it is entirely unclear whether this is due to distance to the coast, or
 some other factor such as the relative wealth, densities and ages of these neighbourhoods.
+
 ### Question 4
 My intention with this question was to control for the effects I had found above,
 but to start, let me just compare the diameters outright.
@@ -219,11 +235,14 @@ genus_summary <- vancouver_trees %>%
   
 head(genus_summary)
 ```
+
+Already, we can see that the diameter ranges substantially between genera, and could by hand
+pick out a few trees that seem to grow well.
+
 To get a better sense of this, I'll plot the height and diameter of each genus,
 with the size of the points scaled by the count of trees in that genus.
 The points will need some transparency so we can see when they overlap
 I'll label the top few points on the plot. 
-Points will be tr
 
 ```{R}
 genus_summary %>%
@@ -234,6 +253,7 @@ genus_summary %>%
   scale_color_discrete(guide="none") +
   xlim(0,55)
 ```
+
 Unfortunately, "castanea" and "salix" overlap, but otherwise, we can see the tallest 
 and widest few genera and get a sense of their scale relative to other trees.
 <!----------------------------------------------------------------------------->
@@ -246,7 +266,7 @@ Based on the operations that you've completed, how much closer are you to answer
 I have made some progress towards answering all 4 of my research questions,
 although my approach is fairly coarse and qualitative in all cases.
 I know that trees grow taller roughly linearly as they age, and that the
-further east you go trees shrink (although, as noted, it's not clear if this has
+further east you go, the smaller trees tend to (although, as noted above, it's not clear if this has
 much to do with the distance from the shore). For a more meaningful analysis of
 both of these questions, I really should be limiting myself to a specific species
 of tree, and perhaps in a specific area.
@@ -256,12 +276,13 @@ although really I was hoping to get at east/west/north/south differences, which
 has not been elucidated from this example.
 
 For question 4, I have a few genera that grow taller and wider on average, but this did not include
-any controlling for other impacts, of which there are many.
+any controlling for other impacts, of which there are many. For instance, it may be
+that the genera that appear to "grow best" are just ones that happened to only have
+been planted a long time ago, and have thus had lots of time to grow.
 
 A more refined and realizable set of questions might be:
 
 1. What quantitative relationship exists between the date planted and tree diameter?
-    Can we distinguish or control for the age of a tree when it was planted?
 2. How does the cardinal direction of a road affect the growth of trees lining the street?
    Can we predict this effect numerically?
 3. What relationship does geographic location have on the growth of given species of trees?
@@ -290,15 +311,16 @@ The goal is to study trees, each tree occupies a row, and can be seen as one
 observation of a tree.
 Each column is a variable relating to that tree. To discuss the first 8 columns:
 the tree's ID is a unique identifier. The civic number appears to correspond to a house number. 
-In untidy data, this might be combined withe the following column, the street name, 
-however separating it like this is much tidier, as it allows for analysis per street.
+In untidy data, this might be combined with the following column, the street name, 
+however separating it like this is much nicer, as these are really two separate variables,
+and this allows for analysis per street.
 Likewise for genus and species. The cultivar is yet another independent property.
 Arguably, the inclusion of the common name is untidy, as this is entirely redundant
 with the genus and species. It would be better to separately store a lookup table for this
 information. The "assigned" column has an unclear meaning, which is also bad practice 
-(although this is not *necessarily* unitdy).
+(although this is not *necessarily* untidy).
 
-Looking closely at a few further columns, on_street_block also contains only less data than
+Looking closely at a few further columns, on_street_block also contains strictly less data than
 civic_number.
 on_street and std_street do appear to vary from one another, which likely corresponds to two different
 systems for representing the streets location. This is also potentially confusing, a better option
@@ -325,14 +347,16 @@ To untidy it, I'll do something that is truly a little insane, and simply give e
 variable its own row, such that each row is a tree-numerical value combo
 ```{R}
 vancouver_trees_untidy <- vancouver_trees %>%
-  pivot_longer(cols = where(is.numeric) & -tree_id, names_to = "Property", values_to = "Value")
+  pivot_longer(cols = where(is.numeric) & -tree_id, names_to = "Property", values_to = "Value") %>%
+  relocate(c("Property", "Value"), .after = tree_id) #ensure the new columns are near the start
 
 head(vancouver_trees_untidy, n= 15)
 ```
 Now to clean it back up:
 ```{R}
 vancouver_trees_retidy <- vancouver_trees_untidy %>%
-  pivot_wider(names_from = Property, values_from = Value)
+  pivot_wider(names_from = Property, values_from = Value) %>%
+  relocate(where(is.numeric), .after = tree_id) #to illustrate
 
 head(vancouver_trees_retidy)
 ```
@@ -378,10 +402,10 @@ vancouver_trees_clean <- vancouver_trees %>%
   mutate(nominal_age = date("2023-10-24") - date_planted) %>% #use the more direct variable of age
   relocate(nominal_age, .after = tree_id) %>% #Rearrange the date to put the interesting start at the front
   relocate(diameter, .after = nominal_age) %>%
-  select(-date_planted)
+  select(-date_planted) #get rid of the residual variable
 head(vancouver_trees_clean)
 ```
-Now I'll make a version for my question 1, which only requires selecting a few fewer variables.
+Now I'll make a version for my question 1, which only requires removing a few unnecessary variables.
 Realistically, we would also eventually want to filter to one specific species, but some more 
 work is required to pick a species that has a large number of species planted over a wide range 
 of dates.
@@ -403,8 +427,10 @@ vancouver_trees_q2 <- vancouver_trees_clean %>%
     str_ends(std_street, "AV") & street_side_name == "EVEN" ~ "south",
     str_ends(std_street, "ST") & street_side_name == "ODD" ~ "east",
     str_ends(std_street, "ST") & street_side_name == "EVEN" ~ "west",
-  ))
+  )) %>%
+  relocate(street_side, .after = tree_id)
 
+head(vancouver_trees_q2)
 ```
 Of course, this won't be perfect, because not all streets and avenues are perfectly
 parallel, and I can't guarantee that the naming and numbering scheme are 100%
@@ -460,10 +486,10 @@ lm_tidy <- broom::tidy(diam_v_age)
 print(lm_tidy %>% select(c(term, p.value)))
 
 ```
-Here, the value I'm mainly interested is the bottom left of this table. In fact,
-it would appear that the assocation is so significant, that the p value has rounded
+Here, the value I'm mainly interested is the bottom right of this table. In fact,
+it would appear that the association is so significant, that the p value has rounded
 all the way down to zero. This perhaps isn't too surprising given what we saw in
-section 1.
+section 1.2!
 
 <!----------------------------------------------------------------------------->
 

@@ -1,4 +1,4 @@
-street_side_name,mean,range,standard_dev,count
+street_side_name,mean_diam,diam_range,diam_standard_dev,count
 BIKE MED,3.013157894736842,0.5,0.08111071056538127,38
 EVEN,11.491404540576701,305,9.12718744528188,71753
 GREENWAY,16.4,25,10.573551910309043,5
